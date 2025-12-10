@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe AI - Model Comparison</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 16px;
+    }
+
+    .model-selector {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      border: 2px solid #667eea;
+    }
+
+    .model-selector label {
+      display: block;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .model-selector select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #667eea;
+      border-radius: 10px;
+      font-size: 16px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+
+    .model-selector select:hover {
+      border-color: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .model-selector select:focus {
+      outline: none;
+      border-color: #5568d3;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .model-info {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #667eea;
+      color: white;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    .model-description {
+      margin-top: 12px;
+      padding: 12px;
+      background: white;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      border-left: 4px solid #667eea;
+      text-align: left;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #667eea;
+      margin-top: 2px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 110px);
+      grid-gap: 12px;
+      margin: 30px auto;
+      width: fit-content;
+      padding: 20px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 15px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .cell {
+      width: 110px;
+      height: 110px;
+      background: white;
+      border: 3px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 56px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .cell:hover:not(:disabled) {
+      background: #f8f9fa;
+      transform: scale(1.08) translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+
+    .cell:active:not(:disabled) {
+      transform: scale(1.02);
+    }
+
+    .cell:disabled {
+      cursor: not-allowed;
+    }
+
+    .cell.x {
+      color: #667eea;
+      animation: popIn 0.3s ease;
+    }
+
+    .cell.o {
+      color: #f093fb;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .status {
+      font-size: 24px;
+      margin: 20px 0;
+      min-height: 36px;
+      font-weight: bold;
+      color: #333;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status.winner {
+      background: #d4edda;
+      color: #155724;
+      animation: celebrate 0.5s ease;
+    }
+
+    .status.loser {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status.draw {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    @keyframes celebrate {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.05) rotate(2deg); }
+      75% { transform: scale(1.05) rotate(-2deg); }
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      background: #5a6268;
+    }
+
+    .score {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    .score-item {
+      text-align: center;
+      padding: 15px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 12px;
+      transition: transform 0.3s;
+    }
+
+    .score-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .score-value {
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .score-item.player .score-value {
+      color: #667eea;
+    }
+
+    .score-item.ai .score-value {
+      color: #f093fb;
+    }
+
+    .score-item.draws .score-value {
+      color: #ffc107;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .win-rate {
+      margin-top: 15px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .win-rate strong {
+      color: #333;
+      font-size: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .board {
+        grid-template-columns: repeat(3, 90px);
+        grid-gap: 10px;
+        padding: 15px;
+      }
+
+      .cell {
+        width: 90px;
+        height: 90px;
+        font-size: 48px;
+      }
+
+      .score {
+        gap: 10px;
+      }
+
+      .score-value {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 Tic-Tac-Toe AI</h1>
+    <p class="subtitle">You are <strong style="color: #667eea;">X</strong>, AI is <strong style="color: #f093fb;">O</strong></p>
+
+    <div class="model-selector">
+      <label for="modelSelect">🤖 Select AI Model:</label>
+      <select id="modelSelect">
+        <option value="base">Base Model (Self-play - 21K samples)</option>
+        <option value="external">External UCI Dataset (958 samples)</option>
+        <option value="kaggle">Kaggle 255K Games Dataset 🔥</option>
+      </select>
+      <div class="model-info" id="modelInfo">Loading models...</div>
+      <div class="model-description" id="modelDescription">
+        Select a model to see training details
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-label">Games</div>
+          <div class="stat-value" id="totalGames">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Your Win %</div>
+          <div class="stat-value" id="winRate">0%</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Moves</div>
+          <div class="stat-value" id="totalMoves">0</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status" id="status">Your turn! Make your move.</div>
+    
+    <div class="board" id="board">
+      <button class="cell" data-index="0"></button>
+      <button class="cell" data-index="1"></button>
+      <button class="cell" data-index="2"></button>
+      <button class="cell" data-index="3"></button>
+      <button class="cell" data-index="4"></button>
+      <button class="cell" data-index="5"></button>
+      <button class="cell" data-index="6"></button>
+      <button class="cell" data-index="7"></button>
+      <button class="cell" data-index="8"></button>
+    </div>
+    
+    <div class="button-group">
+      <button id="reset">🔄 New Game</button>
+      <button class="secondary" id="clearStats">📊 Reset Stats</button>
+    </div>
+
+    <div class="score">
+      <div class="score-item player">
+        <div class="score-label">You</div>
+        <div class="score-value" id="playerScore">0</div>
+      </div>
+      <div class="score-item ai">
+        <div class="score-label">AI</div>
+        <div class="score-value" id="aiScore">0</div>
+      </div>
+      <div class="score-item draws">
+        <div class="score-label">Draws</div>
+        <div class="score-value" id="drawScore">0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let board = Array(9).fill(0);
+    let gameActive = true;
+    let scores = { player: 0, ai: 0, draw: 0 };
+    let currentModel = 'base';
+    let availableModels = [];
+    let totalMoves = 0;
+
+    const cells = document.querySelectorAll('.cell');
+    const statusEl = document.getElementById('status');
+    const resetBtn = document.getElementById('reset');
+    const clearStatsBtn = document.getElementById('clearStats');
+    const modelSelect = document.getElementById('modelSelect');
+    const modelInfo = document.getElementById('modelInfo');
+    const modelDescription = document.getElementById('modelDescription');
+
+    const modelDescriptions = {
+      base: '🎲 <strong>Self-play Training:</strong> Trained on 5,000 games (21,368 samples) where the AI played against itself using minimax. Mix of 80% optimal and 20% random moves. ~85% accuracy. Easiest to beat.',
+      external: '📊 <strong>UCI Dataset:</strong> Trained on 958 endgame positions from UCI Machine Learning Repository (23KB). Small dataset, limited learning. Easy to beat.',
+      kaggle: '🔥 <strong>Kaggle 255K Games:</strong> Trained on 255,168 complete games from Kaggle! Massive dataset with full game sequences. This AI should be MUCH harder to beat!'
+    };
+
+    // Initialize
+    cells.forEach(cell => {
+      cell.addEventListener('click', handleCellClick);
+    });
+    resetBtn.addEventListener('click', resetGame);
+    clearStatsBtn.addEventListener('click', clearStats);
+    modelSelect.addEventListener('change', handleModelChange);
+
+    // Load available models
+    async function loadAvailableModels() {
+      try {
+        const response = await fetch('/api/models');
+        const data = await response.json();
+        
+        availableModels = data.available;
+        currentModel = data.current;
+        
+        // Update select options
+        modelSelect.innerHTML = '';
+        availableModels.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model;
+          option.textContent = getModelLabel(model);
+          if (model === currentModel) option.selected = true;
+          modelSelect.appendChild(option);
+        });
+        
+        updateModelInfo();
+        
+      } catch (error) {
+        console.error('Error loading models:', error);
+        modelInfo.textContent = '❌ Error loading models';
+        modelDescription.innerHTML = '<strong>Could not connect to server.</strong> Make sure the server is running.';
+      }
+    }
+
+    function getModelLabel(model) {
+      const labels = {
+        base: 'Base Model (Self-play - 21K samples)',
+        external: 'External UCI Dataset (958 samples)',
+        kaggle: 'Kaggle 255K Games Dataset 🔥'
+      };
+      return labels[model] || model;
+    }
+
+    function updateModelInfo() {
+      const labels = {
+        base: '🟢 Base AI (21K samples)',
+        external: '🔵 UCI Dataset (958 samples)',
+        kaggle: '🔴 Kaggle AI (255K games!)'
+      };
+      modelInfo.textContent = labels[currentModel] || `Current: ${currentModel}`;
+      modelDescription.innerHTML = modelDescriptions[currentModel] || 'Model loaded successfully';
+      updateStats();
+    }
+
+    function updateStats() {
+      const totalGames = scores.player + scores.ai + scores.draw;
+      document.getElementById('totalGames').textContent = totalGames;
+      
+      const winRate = totalGames > 0 
+        ? Math.round((scores.player / totalGames) * 100)
+        : 0;
+      document.getElementById('winRate').textContent = winRate + '%';
+      
+      document.getElementById('totalMoves').textContent = totalMoves;
+    }
+
+    async function handleModelChange() {
+      const newModel = modelSelect.value;
+      
+      try {
+        statusEl.innerHTML = '🔄 Switching model... <span class="loading"></span>';
+        
+        const response = await fetch('/api/switch-model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: newModel })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentModel = newModel;
+          updateModelInfo();
+          resetGame();
+          statusEl.textContent = `✅ Switched to ${getModelLabel(newModel)}! Your turn.`;
+        } else {
+          statusEl.textContent = '❌ Failed to switch model';
+          modelSelect.value = currentModel;
+        }
+        
+      } catch (error) {
+        console.error('Error switching model:', error);
+        statusEl.textContent = '❌ Error switching model';
+        modelSelect.value = currentModel;
+      }
+    }
+
+    async function handleCellClick(e) {
+      const index = parseInt(e.target.dataset.index);
+      
+      if (!gameActive || board[index] !== 0) return;
+      
+      // Player move
+      makeMove(index, 1, 'X');
+      totalMoves++;
+      updateStats();
+      
+      if (!gameActive) return;
+      
+      // AI move
+      statusEl.innerHTML = '🤔 AI is thinking... <span class="loading"></span>';
+      disableBoard();
+      
+      try {
+        const response = await fetch('/api/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ board })
+        });
+        
+        const data = await response.json();
+        
+        if (data.move !== null && data.move !== undefined) {
+          setTimeout(() => {
+            makeMove(data.move, -1, 'O');
+            board = data.board;
+            totalMoves++;
+            updateStats();
+            
+            if (data.winner !== null) {
+              endGame(data.winner);
+            } else {
+              statusEl.textContent = '✨ Your turn! Make your move.';
+              enableBoard();
+            }
+          }, 600);
+        } else if (data.winner !== null) {
+          endGame(data.winner);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        statusEl.textContent = '❌ Error connecting to AI!';
+        enableBoard();
+      }
+    }
+
+    function makeMove(index, player, symbol) {
+      board[index] = player;
+      const cell = cells[index];
+      cell.textContent = symbol;
+      cell.classList.add(symbol.toLowerCase());
+      cell.disabled = true;
+      
+      const winner = checkWinner();
+      if (winner !== null) {
+        endGame(winner);
+      }
+    }
+
+    function checkWinner() {
+      const lines = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+
+      for (const [a, b, c] of lines) {
+        if (board[a] !== 0 && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+
+      return board.includes(0) ? null : 0;
+    }
+
+    function endGame(winner) {
+      gameActive = false;
+      disableBoard();
+      
+      statusEl.classList.remove('winner', 'loser', 'draw');
+      
+      if (winner === 1) {
+        statusEl.textContent = '🎉 You won! Great job!';
+        statusEl.classList.add('winner');
+        scores.player++;
+        document.getElementById('playerScore').textContent = scores.player;
+      } else if (winner === -1) {
+        statusEl.textContent = '🤖 AI wins! Try again?';
+        statusEl.classList.add('loser');
+        scores.ai++;
+        document.getElementById('aiScore').textContent = scores.ai;
+      } else {
+        statusEl.textContent = '🤝 It\'s a draw! Well played!';
+        statusEl.classList.add('draw');
+        scores.draw++;
+        document.getElementById('drawScore').textContent = scores.draw;
+      }
+      
+      updateStats();
+    }
+
+    function resetGame() {
+      board = Array(9).fill(0);
+      gameActive = true;
+      statusEl.textContent = '✨ Your turn! Make your move.';
+      statusEl.classList.remove('winner', 'loser', 'draw');
+      
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.disabled = false;
+        cell.classList.remove('x', 'o');
+      });
+    }
+
+    function clearStats() {
+      if (confirm('Are you sure you want to reset all statistics?')) {
+        scores = { player: 0, ai: 0, draw: 0 };
+        totalMoves = 0;
+        document.getElementById('playerScore').textContent = '0';
+        document.getElementById('aiScore').textContent = '0';
+        document.getElementById('drawScore').textContent = '0';
+        updateStats();
+        statusEl.textContent = '📊 Stats cleared! Start a new game.';
+      }
+    }
+
+    function disableBoard() {
+      cells.forEach(cell => cell.disabled = true);
+    }
+
+    function enableBoard() {
+      cells.forEach(cell => {
+        if (board[cell.dataset.index] === 0) {
+          cell.disabled = false;
+        }
+      });
+    }
+
+    // Load models on page load
+    loadAvailableModels();
+  </script>
+</body>
+</html>
